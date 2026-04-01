@@ -23,6 +23,15 @@ export function TransactionForm({ isOpen, onClose, onSubmit, transaction }: Tran
   const [date, setDate] = useState('');
   const [type, setType] = useState<'income' | 'expense'>('expense');
 
+  // Format number to Indonesian Rupiah style (1.000.000)
+  const formatNumber = (val: string) => {
+    if (!val) return '';
+    // Remove all non-digits
+    const clean = val.replace(/\D/g, '');
+    // Add dots every 3 digits
+    return clean.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
+
   // Set today's date as default
   useEffect(() => {
     if (!transaction && isOpen) {
@@ -35,7 +44,7 @@ export function TransactionForm({ isOpen, onClose, onSubmit, transaction }: Tran
   useEffect(() => {
     if (transaction) {
       setDescription(transaction.description);
-      setAmount(transaction.amount.toString());
+      setAmount(formatNumber(transaction.amount.toString()));
       setDate(transaction.date);
       setType(transaction.type);
     } else {
@@ -56,7 +65,8 @@ export function TransactionForm({ isOpen, onClose, onSubmit, transaction }: Tran
       return;
     }
 
-    const numericAmount = parseFloat(amount);
+    // Remove dots and parse as float
+    const numericAmount = parseFloat(amount.replace(/\./g, ''));
     if (isNaN(numericAmount) || numericAmount <= 0) {
       return;
     }
@@ -104,16 +114,20 @@ export function TransactionForm({ isOpen, onClose, onSubmit, transaction }: Tran
             {/* Amount */}
             <div className="grid gap-2">
               <Label htmlFor="amount">Amount</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
+                  Rp
+                </span>
+                <Input
+                  id="amount"
+                  type="text"
+                  placeholder="0"
+                  className="pl-10 font-medium"
+                  value={amount}
+                  onChange={(e) => setAmount(formatNumber(e.target.value))}
+                  required
+                />
+              </div>
             </div>
 
             {/* Date */}
