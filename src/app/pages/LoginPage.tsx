@@ -24,6 +24,7 @@ export function LoginPage() {
   const [signupPassword, setSignupPassword] = useState('');
   
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
   
@@ -57,10 +58,19 @@ export function LoginPage() {
       return;
     }
 
-    const result = await signUp(signupEmail, signupPassword, signupName);
+    const result = await signUp(signupEmail, signupPassword, signupName) as any;
     
     if (result.success) {
-      navigate('/dashboard', { replace: true });
+      if (result.message) {
+        setSuccessMessage(result.message);
+        setIsLoading(false);
+        // Clear form
+        setSignupName('');
+        setSignupEmail('');
+        setSignupPassword('');
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } else {
       setError(result.error || 'Failed to create account');
       setIsLoading(false);
@@ -148,6 +158,13 @@ export function LoginPage() {
                   {error && activeTab === 'signup' && (
                     <Alert variant="destructive">
                       <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Success Alert */}
+                  {successMessage && activeTab === 'signup' && (
+                    <Alert className="bg-green-50 border-green-200 text-green-800">
+                      <AlertDescription>{successMessage}</AlertDescription>
                     </Alert>
                   )}
 

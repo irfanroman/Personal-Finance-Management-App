@@ -66,33 +66,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const signUp = async (email: string, password: string, name: string) => {
     try {
-      // Call backend to create user with admin privileges
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/server/auth/signup`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password, name }),
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name }
         }
-      );
+      });
 
-      const text = await response.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        console.error('Failed to parse JSON response:', text);
-        return { success: false, error: `Server error: ${text.substring(0, 100)}` };
+      if (error) {
+        return { success: false, error: error.message };
       }
 
-      if (!response.ok) {
-        return { success: false, error: data.error || 'Failed to create account' };
+      // If session is null but no error, it means email verification is required
+      if (!data.session && data.user) {
+        return { 
+          success: true, 
+          message: 'Verification email sent! Please check your inbox.' 
+        };
       }
 
-      // Now sign in the user
-      return await signIn(email, password);
+      return { success: true };
     } catch (error: any) {
       console.error('Signup error:', error);
       return { success: false, error: error.message || 'Failed to create account' };
